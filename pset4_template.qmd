@@ -50,6 +50,10 @@ pos2016 = pd.read_csv('data/Q4_2016.csv')
 pos2017 = pd.read_csv('data/Q4_2017.csv')
 pos2018 = pd.read_csv('data/Q4_2018.csv')
 pos2019 = pd.read_csv('data/Q4_2019.csv')
+pos2016['Year'] = '2016'
+pos2017['Year'] = '2017'
+pos2018['Year'] = '2018'
+pos2019['Year'] = '2019'
 # 2: Filter for Short-Term Hospitals
 short_term_hospitals_6 = pos2016[(pos2016['PRVDR_CTGRY_CD'] == 1.0) & (pos2016['PRVDR_CTGRY_SBTYP_CD'] == 1)]
 num_hospitals_6 = short_term_hospitals_6.shape[0]
@@ -106,11 +110,9 @@ chart_unique_hospitals = alt.Chart(total_hospitals_per_year).mark_bar().encode(
 
 chart_unique_hospitals.display()
 
-# Count unique hospitals per year
 unique_hospitals_per_year = short_term_hospitals.groupby('Year')['PRVDR_NUM'].nunique().reset_index()
 unique_hospitals_per_year.columns = ['Year', 'Unique Hospitals']
 
-# Plot with Altair
 chart_unique_hospitals = alt.Chart(unique_hospitals_per_year).mark_bar().encode(
     x=alt.X('Year:O', title='Year'),
     y=alt.Y('Unique Hospitals', title='Number of Unique Hospitals',),
@@ -125,6 +127,65 @@ chart_unique_hospitals = alt.Chart(unique_hospitals_per_year).mark_bar().encode(
 
 chart_unique_hospitals.display()
 ```
+```{python}
+active_2016 = short_term_hospitals[short_term_hospitals['Year'] == '2016']
+active_2016_hospitals = active_2016[['PRVDR_NUM', 'FAC_NAME', 'ZIP_CD']].drop_duplicates()
+
+suspected_closures = []
+
+for year, df in zip(['2017', '2018', '2019'], [pos2017, pos2018, pos2019]):
+    year_hospitals = df[(df['PRVDR_CTGRY_CD'] == 1) & (df['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+    closed_hospitals = active_2016_hospitals[
+        ~active_2016_hospitals['PRVDR_NUM'].isin(year_hospitals[year_hospitals['PGM_TRMNTN_CD'] == 0]['PRVDR_NUM'])
+    ]
+    
+    closed_hospitals = closed_hospitals.assign(Suspected_Closure_Year=year)
+    suspected_closures.append(closed_hospitals)
+
+suspected_closures_df = pd.concat(suspected_closures).drop_duplicates(['PRVDR_NUM'])
+
+closures_count = suspected_closures_df.shape[0]
+print(f"Number of suspected closures: {closures_count}")
+print(suspected_closures_df[['FAC_NAME', 'ZIP_CD', 'Suspected_Closure_Year']])
+```
+```{python}
+sorted_closures_top10 = suspected_closures_df.sort_values('FAC_NAME').head(10)
+
+print(sorted_closures_top10[['FAC_NAME', 'Suspected_Closure_Year']])
+```
+```{python}
+suspected_closures_df = pd.concat(suspected_closures).drop_duplicates(['PRVDR_NUM'])
+suspected_closures_df
+active_hospitals_zip_year = short_term_hospitals[short_term_hospitals['PGM_TRMNTN_CD'] == 0].groupby(['ZIP_CD', 'Year']).size().unstack(fill_value=0)
+
+merger_candidates = []
+
+for _, row in suspected_closures_df.iterrows():
+    zip_code = row['ZIP_CD']
+    closure_year = row['Suspected_Closure_Year']
+    
+    if closure_year in ['2016', '2017', '2018']:
+        next_year = str(int(closure_year) + 1)
+        if zip_code in active_hospitals_zip_year.index:
+            if active_hospitals_zip_year.loc[zip_code, next_year] >= active_hospitals_zip_year.loc[zip_code, closure_year]:
+                merger_candidates.append(row)
+
+merger_candidates_df = pd.DataFrame(merger_candidates)
+
+merger_count = merger_candidates_df.shape[0]
+print(f"Number of potential mergers/acquisitions: {merger_count}")
+print(merger_candidates_df[['FAC_NAME', 'ZIP_CD', 'Suspected_Closure_Year']])
+```
+```{python}
+corrected_closures_df = suspected_closures_df[~suspected_closures_df['PRVDR_NUM'].isin(merger_candidates_df['PRVDR_NUM'])]
+
+corrected_closures_count = corrected_closures_df.shape[0]
+
+sorted_corrected_closures_top10 = corrected_closures_df.sort_values('FAC_NAME').head(10)
+
+print(f"Number of corrected hospital closures: {corrected_closures_count}")
+print(sorted_corrected_closures_top10[['FAC_NAME', 'ZIP_CD', 'Suspected_Closure_Year']])
+```
 1. 
 2. 
     a.
@@ -135,7 +196,9 @@ chart_unique_hospitals.display()
     b.
 
 ## Identify hospital closures in POS file (15 pts) (*)
+```{python}
 
+```
 1. 
 2. 
 3. 

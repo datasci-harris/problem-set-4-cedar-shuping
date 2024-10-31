@@ -42,7 +42,89 @@ Please refer to the minilesson on code style
 **Important:** Repositories are for tracking code. **Do not commit the data or shapefiles to your repo.** The best way to do this is with `.gitignore`, which we have covered in class. If you do accidentally commit the data, Github has a [guide](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github#removing-files-from-a-repositorys-history). The best course of action depends on whether you have pushed yet. This also means that both partners will have to download the initial raw data and any data cleaning code will need to be re-run on both partners' computers. 
 
 ## Download and explore the Provider of Services (POS) file (10 pts)
+```{python}
+import pandas as pd
 
+# 1: Load the 2016 POS Data
+pos2016 = pd.read_csv('data/Q4_2016.csv')
+pos2017 = pd.read_csv('data/Q4_2017.csv')
+pos2018 = pd.read_csv('data/Q4_2018.csv')
+pos2019 = pd.read_csv('data/Q4_2019.csv')
+# 2: Filter for Short-Term Hospitals
+short_term_hospitals_6 = pos2016[(pos2016['PRVDR_CTGRY_CD'] == 1.0) & (pos2016['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+num_hospitals_6 = short_term_hospitals_6.shape[0]
+
+print(f"Number of short-term hospitals reported in 2016 data: {num_hospitals_6}")
+
+unique_hospitals = short_term_hospitals_6.drop_duplicates(subset='FAC_NAME')
+print(f"Number of unique hospitals: {len(unique_hospitals)}")
+```
+```{python}
+short_term_hospitals_7 = pos2017[(pos2017['PRVDR_CTGRY_CD'] == 1) & (pos2017['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+num_hospitals_7 = short_term_hospitals_7.shape[0]
+
+print(f"Number of short-term hospitals reported in 2017 data: {num_hospitals_7}")
+
+short_term_hospitals_8 = pos2018[(pos2018['PRVDR_CTGRY_CD'] == 1) & (pos2018['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+num_hospitals_8 = short_term_hospitals_8.shape[0]
+
+print(f"Number of short-term hospitals reported in 2018 data: {num_hospitals_8}")
+
+short_term_hospitals_9 = pos2019[(pos2019['PRVDR_CTGRY_CD'] == 1) & (pos2019['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+num_hospitals_9 = short_term_hospitals_9.shape[0]
+
+print(f"Number of short-term hospitals reported in 2019 data: {num_hospitals_9}")
+```
+```{python}
+import altair as alt
+
+years = ['2016', '2017', '2018', '2019']
+dataframes = []
+
+for year in years:
+    df = eval(f'pos{year}')
+    df['Year'] = year 
+    dataframes.append(df)
+
+all_data = pd.concat(dataframes)
+
+short_term_hospitals = all_data[(all_data['PRVDR_CTGRY_CD'] == 1) & (all_data['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+
+total_hospitals_per_year = short_term_hospitals['Year'].value_counts().reset_index()
+total_hospitals_per_year.columns = ['Year', 'Total Hospitals']
+chart_unique_hospitals = alt.Chart(total_hospitals_per_year).mark_bar().encode(
+    x=alt.X('Year:O', title='Year'),
+    y=alt.Y('Total Hospitals', title='Number of Total Hospitals',),
+    color=alt.value('blue')
+).properties(
+    title='Number of Total Short-Term Hospitals by Year'
+).transform_calculate(
+    adjusted_value='datum["Total Hospitals"]-7000'
+).encode(
+    y=alt.Y('adjusted_value:Q', title='Number of Total Hospitals (Adjusted)', scale=alt.Scale(domain=[0, 350]), axis=alt.Axis(labelExpr='datum.value + 7000'))
+)
+
+chart_unique_hospitals.display()
+
+# Count unique hospitals per year
+unique_hospitals_per_year = short_term_hospitals.groupby('Year')['PRVDR_NUM'].nunique().reset_index()
+unique_hospitals_per_year.columns = ['Year', 'Unique Hospitals']
+
+# Plot with Altair
+chart_unique_hospitals = alt.Chart(unique_hospitals_per_year).mark_bar().encode(
+    x=alt.X('Year:O', title='Year'),
+    y=alt.Y('Unique Hospitals', title='Number of Unique Hospitals',),
+    color=alt.value('skyblue')
+).properties(
+    title='Number of Unique Short-Term Hospitals by Year'
+).transform_calculate(
+    adjusted_value='datum["Unique Hospitals"]-7000'
+).encode(
+    y=alt.Y('adjusted_value:Q', title='Number of Unique Hospitals (Adjusted)', scale=alt.Scale(domain=[0, 350]), axis=alt.Axis(labelExpr='datum.value + 7000'))
+)
+
+chart_unique_hospitals.display()
+```
 1. 
 2. 
     a.

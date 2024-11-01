@@ -186,6 +186,7 @@ sorted_corrected_closures_top10 = corrected_closures_df.sort_values('FAC_NAME').
 print(f"Number of corrected hospital closures: {corrected_closures_count}")
 print(sorted_corrected_closures_top10[['FAC_NAME', 'ZIP_CD', 'Suspected_Closure_Year']])
 ```
+
 1. 
 2. 
     a.
@@ -207,9 +208,53 @@ print(sorted_corrected_closures_top10[['FAC_NAME', 'ZIP_CD', 'Suspected_Closure_
 ## Download Census zip code shapefile (10 pt) 
 
 1. 
-    a.
+    a. 
+    -rw-r--r-- 1 15535 197609 6.2M Oct 30 23:58 gz_2010_us_860_00_500k.dbf
+    
+    -rw-r--r-- 1 15535 197609  165 Oct 30 23:58 gz_2010_us_860_00_500k.prj
+    
+    -rw-r--r-- 1 15535 197609 799M Oct 30 23:58 gz_2010_us_860_00_500k.shp
+    
+    -rw-r--r-- 1 15535 197609 259K Oct 30 23:58 gz_2010_us_860_00_500k.shx
+    
+    -rw-r--r-- 1 15535 197609  16K Oct 30 23:58 gz_2010_us_860_00_500k.xml
+
     b. 
 2. 
+```{python}
+import geopandas as gpd
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load the shapefile
+zip_shapefile = gpd.read_file('data/gz_2010_us_860_00_500k.shp')
+
+
+```
+```{python}
+# texas_choropleth
+```
+```{python}
+# Filter for Texas ZIP codes (first two digits between 75 and 79)
+texas_zip_codes = zip_shapefile[zip_shapefile['ZCTA5'].str[:3].isin(['733']) | zip_shapefile['ZCTA5'].str[:2].isin(['75', '76', '77', '78', '79'])]
+
+# Filter and count hospitals per ZIP code in Texas
+texas_hospitals = short_term_hospitals_6[
+    short_term_hospitals_6['ZIP_CD'].astype(str).str[:3].isin(['733']) | 
+    short_term_hospitals_6['ZIP_CD'].astype(str).str[:2].isin(['75', '76', '77', '78', '79'])
+]
+hospitals_per_zip = texas_hospitals['ZIP_CD'].value_counts().reset_index()
+hospitals_per_zip.columns = ['ZIP_CD', 'Hospital_Count']
+
+# Merge hospital count with Texas ZIP shapefile
+texas_zip_codes['ZIP_CD'] = texas_zip_codes['ZCTA5'].astype(int).astype(str).str.zfill(5)
+hospitals_per_zip['ZIP_CD'] = hospitals_per_zip['ZIP_CD'].astype(int).astype(str).str.zfill(5)
+texas_choropleth = texas_zip_codes.merge(hospitals_per_zip, on='ZIP_CD', how='left').fillna(0)
+```
+```{python}
+texas_choropleth.plot(column="Hospital_Count", cmap='Reds', legend=True)
+
+```
 
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
 

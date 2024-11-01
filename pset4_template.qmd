@@ -196,9 +196,7 @@ print(sorted_corrected_closures_top10[['FAC_NAME', 'ZIP_CD', 'Suspected_Closure_
     b.
 
 ## Identify hospital closures in POS file (15 pts) (*)
-```{python}
 
-```
 1. 
 2. 
 3. 

@@ -365,5 +365,58 @@ zips_texas_centroids.plot(column='nearest_hospital_distance_miles',  legend=True
 2. 
 3. 
 4. 
+```{python}
+suspected_closures_df['ZIP_CD'] = suspected_closures_df['ZIP_CD'].astype(int).astype(str).str.zfill(5)
+
+closure_table = suspected_closures_df[suspected_closures_df['ZIP_CD'].str[:3].isin(['733']) | suspected_closures_df['ZIP_CD'].str[:2].isin(['75', '76', '77', '78', '79'])]
+closure_table = closure_table['ZIP_CD'].value_counts().reset_index()
+closure_table.columns = ['ZIP_CD', 'Total Closure']
+closure_table
+```
+```{python}
+
+closure_choropleth = texas_zip_codes.merge(closure_table, on='ZIP_CD', how='right')
+
+```
+```{python}
+closure_choropleth.plot(column = 'Total Closure', legend = True)
+```
+```{python}
+closure_choropleth = closure_choropleth.to_crs(epsg=32614)
+
+closure_choropleth['buffer_10_miles'] = closure_choropleth.geometry.buffer(16093.4)
+
+# Create a GeoDataFrame containing just the buffered areas
+buffers = closure_choropleth[['ZIP_CD', 'buffer_10_miles']]
+buffers = buffers.set_geometry('buffer_10_miles')
+
+# Perform a spatial join between the Texas ZIP codes and the buffers to find indirectly affected ZIP codes
+indirectly_affected_zips = gpd.sjoin(zips_texas_centroids, buffers, how='inner', predicate='intersects')
+
+# Count unique indirectly affected ZIP codes
+indirectly_affected_zip_count = indirectly_affected_zips['ZIP_CD'].nunique()
+
+# Display results
+print(f"Number of indirectly affected ZIP codes in Texas: {indirectly_affected_zip_count}")
+```
+```{python}
+zips_texas_centroids['Category'] = 'Not Affected'
+
+# Label directly affected ZIP codes
+directly_affected_zips = closure_choropleth['ZIP_CD'].tolist()
+zips_texas_centroids.loc[zips_texas_centroids['ZCTA5'].isin(directly_affected_zips), 'Category'] = 'Directly Affected'
+
+# Label indirectly affected ZIP codes (within 10 miles, but not directly affected)
+indirectly_affected_zips_only = indirectly_affected_zips[~indirectly_affected_zips['ZIP_CD'].isin(directly_affected_zips)]
+indirectly_affected_zip_codes = indirectly_affected_zips_only['ZIP_CD'].tolist()
+zips_texas_centroids.loc[zips_texas_centroids['ZCTA5'].isin(indirectly_affected_zip_codes), 'Category'] = 'Indirectly Affected'
+
+```
+```{python}
+zips_texas_centroids.plot(
+    column='Category',  
+    legend=True
+)
+```
 
 ## Reflecting on the exercise (10 pts) 

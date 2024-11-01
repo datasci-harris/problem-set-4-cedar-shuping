@@ -259,16 +259,106 @@ texas_choropleth.plot(column="Hospital_Count", cmap='Reds', legend=True)
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
 
 1. 
+```{python}
+zips_all_centroids = zip_shapefile.copy()
+zips_all_centroids['geometry'] = zips_all_centroids.centroid
+
+dimensions = zips_all_centroids.shape
+columns_info = zips_all_centroids.columns
+
+dimensions, columns_info
+```
 2. 
+```{python}
+texas_prefixes = ['75', '76', '77', '78', '79', '733']
+bordering_states_prefixes = texas_prefixes + ['73', '74', '70', '71', '87', '88']
+
+zips_texas_centroids = zips_all_centroids[zips_all_centroids['ZCTA5'].str[:3].isin(['733']) | zips_all_centroids['ZCTA5'].str[:2].isin(['75', '76', '77', '78', '79'])]
+
+zips_texas_borderstates_centroids = zips_all_centroids[zips_all_centroids['ZCTA5'].str[:2].isin(bordering_states_prefixes)]
+
+texas_zip_count = zips_texas_centroids['ZCTA5'].nunique()
+texas_borderstates_zip_count = zips_texas_borderstates_centroids['ZCTA5'].nunique()
+
+texas_zip_count, texas_borderstates_zip_count
+```
 3. 
+```{python}
+zips_texas_borderstates_centroids['ZIP_CD'] = zips_texas_borderstates_centroids['ZCTA5'].astype(int).astype(str).str.zfill(5)
+zips_withhospital_centroids = zips_texas_borderstates_centroids.merge(
+    hospitals_per_zip[hospitals_per_zip['Hospital_Count'] > 0], 
+    on='ZIP_CD', 
+    how='inner'
+)
+print(f"Number of ZIP codes with at least one hospital: {zips_withhospital_centroids.shape[0]}")
+zips_withhospital_centroids
+```
+
+
 4. 
     a.
+```{python}
+from shapely.geometry import Point
+import time
+
+# Select a subset of 10 ZIP codes for testing
+zips_texas_centroids_subset = zips_texas_centroids.head(10)
+
+# Start timer
+start_time = time.time()
+
+# Calculate distance to the nearest ZIP code with a hospital for each ZIP in the subset
+zips_texas_centroids_subset['nearest_hospital_distance'] = zips_texas_centroids_subset.geometry.apply(
+    lambda x: zips_withhospital_centroids.distance(x).min()
+)
+
+# End timer and calculate duration
+duration = time.time() - start_time
+print(f"Time taken for 10 ZIP codes: {duration:.2f} seconds")
+```
     b.
+```{python}
+# Start timer
+start_time_full = time.time()
+
+# Calculate distance to the nearest ZIP code with a hospital for each ZIP in the full dataset
+zips_texas_centroids['nearest_hospital_distance'] = zips_texas_centroids.geometry.apply(
+    lambda x: zips_withhospital_centroids.distance(x).min()
+)
+
+# End timer and calculate full duration
+duration_full = time.time() - start_time_full
+print(f"Time taken for full calculation: {duration_full:.2f} seconds")
+```
+    c.
+
+
 5. 
+```{python}
+zips_texas_centroids = zips_texas_centroids.to_crs(epsg=32614)
+zips_withhospital_centroids = zips_withhospital_centroids.to_crs(epsg=32614)
+
+# Calculate distance to the nearest ZIP code with a hospital for each ZIP in Texas
+start_time = time.time()
+zips_texas_centroids['nearest_hospital_distance_meters'] = zips_texas_centroids.geometry.apply(
+    lambda x: zips_withhospital_centroids.distance(x).min()
+)
+duration = time.time() - start_time
+print(f"Time taken for full calculation: {duration:.2f} seconds")
+
+# Convert distances from meters to miles
+zips_texas_centroids['nearest_hospital_distance_miles'] = zips_texas_centroids['nearest_hospital_distance_meters'] * 0.000621371
+
+# Verify results
+print(zips_texas_centroids.head())
+```
     a.
     b.
     c.
-    
+```{python}
+zips_texas_centroids.plot(column='nearest_hospital_distance_miles',  legend=True)
+```
+
 ## Effects of closures on access in Texas (15 pts)
 
 1. 

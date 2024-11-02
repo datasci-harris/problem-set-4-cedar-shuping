@@ -1,5 +1,5 @@
 ---
-title: "Your Title"
+title: "PSET4"
 format: 
   pdf:
     keep-tex: true
@@ -28,9 +28,9 @@ Please refer to the minilesson on code style
 1. This problem set is a paired problem set.
 2. Play paper, scissors, rock to determine who goes first. Call that person *Partner 1*.
     - Partner 1 (name and cnet ID):
-    - Partner 2 (name and cnet ID):
+    - Partner 2 (name and cnet ID): Shuping Wu, shupingw
 3. Partner 1 will accept the `ps4` and then share the link it creates with their partner. You can only share it with one partner so you will not be able to change it after your partner has accepted. 
-4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: \*\*\_\_\*\* \*\*\_\_\*\*
+4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: \*\*\_\_\*\* \*\*\_SHW_\*\*
 5. "I have uploaded the names of anyone else other than my partner and I worked with on the problem set **[here](https://docs.google.com/forms/d/185usrCREQaUbvAXpWhChkjghdGgmAZXA3lPWpXLLsts/edit)**"  (1 point)
 6. Late coins used this pset: \*\*\_\_\*\* Late coins left after submission: \*\*\_\_\*\*
 7. Knit your `ps4.qmd` to an PDF file to make `ps4.pdf`, 
@@ -42,6 +42,14 @@ Please refer to the minilesson on code style
 **Important:** Repositories are for tracking code. **Do not commit the data or shapefiles to your repo.** The best way to do this is with `.gitignore`, which we have covered in class. If you do accidentally commit the data, Github has a [guide](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github#removing-files-from-a-repositorys-history). The best course of action depends on whether you have pushed yet. This also means that both partners will have to download the initial raw data and any data cleaning code will need to be re-run on both partners' computers. 
 
 ## Download and explore the Provider of Services (POS) file (10 pts)
+1. 
+2. 
+    a.
+    b.
+3. 
+4. 
+    a.
+    b.
 ```{python}
 import pandas as pd
 
@@ -127,6 +135,10 @@ chart_unique_hospitals = alt.Chart(unique_hospitals_per_year).mark_bar().encode(
 
 chart_unique_hospitals.display()
 ```
+## Identify hospital closures in POS file (15 pts) (*)
+
+1. 
+
 ```{python}
 active_2016 = short_term_hospitals[short_term_hospitals['Year'] == '2016']
 active_2016_hospitals = active_2016[['PRVDR_NUM', 'FAC_NAME', 'ZIP_CD']].drop_duplicates()
@@ -148,11 +160,21 @@ closures_count = suspected_closures_df.shape[0]
 print(f"Number of suspected closures: {closures_count}")
 print(suspected_closures_df[['FAC_NAME', 'ZIP_CD', 'Suspected_Closure_Year']])
 ```
+
+2. 
+
 ```{python}
 sorted_closures_top10 = suspected_closures_df.sort_values('FAC_NAME').head(10)
 
 print(sorted_closures_top10[['FAC_NAME', 'Suspected_Closure_Year']])
 ```
+
+3. 
+    a. Among the suspected closures, 995 hospitals fit this definition of potentially
+        being a merger/acquisition.
+    b. After correcting for this, there are 3001 hospitals we've got left.
+
+
 ```{python}
 suspected_closures_df = pd.concat(suspected_closures).drop_duplicates(['PRVDR_NUM'])
 suspected_closures_df
@@ -176,6 +198,8 @@ merger_count = merger_candidates_df.shape[0]
 print(f"Number of potential mergers/acquisitions: {merger_count}")
 print(merger_candidates_df[['FAC_NAME', 'ZIP_CD', 'Suspected_Closure_Year']])
 ```
+    c.
+
 ```{python}
 corrected_closures_df = suspected_closures_df[~suspected_closures_df['PRVDR_NUM'].isin(merger_candidates_df['PRVDR_NUM'])]
 
@@ -187,23 +211,8 @@ print(f"Number of corrected hospital closures: {corrected_closures_count}")
 print(sorted_corrected_closures_top10[['FAC_NAME', 'ZIP_CD', 'Suspected_Closure_Year']])
 ```
 
-1. 
-2. 
-    a.
-    b.
-3. 
-4. 
-    a.
-    b.
 
-## Identify hospital closures in POS file (15 pts) (*)
 
-1. 
-2. 
-3. 
-    a.
-    b.
-    c.
 
 ## Download Census zip code shapefile (10 pt) 
 
@@ -258,8 +267,9 @@ texas_choropleth.plot(column="Hospital_Count", cmap='Reds', legend=True)
 
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
 
-1. 
+1.  Dimensions are:
 ```{python}
+#| warning: false
 zips_all_centroids = zip_shapefile.copy()
 zips_all_centroids['geometry'] = zips_all_centroids.centroid
 
@@ -268,7 +278,7 @@ columns_info = zips_all_centroids.columns
 
 dimensions, columns_info
 ```
-2. 
+2. (texas_zip_count, texas_borderstates_zip_count)
 ```{python}
 texas_prefixes = ['75', '76', '77', '78', '79', '733']
 bordering_states_prefixes = texas_prefixes + ['73', '74', '70', '71', '87', '88']
@@ -282,7 +292,7 @@ texas_borderstates_zip_count = zips_texas_borderstates_centroids['ZCTA5'].nuniqu
 
 texas_zip_count, texas_borderstates_zip_count
 ```
-3. 
+3. Merge on ZIP_CD, inner merge.
 ```{python}
 zips_texas_borderstates_centroids['ZIP_CD'] = zips_texas_borderstates_centroids['ZCTA5'].astype(int).astype(str).str.zfill(5)
 zips_withhospital_centroids = zips_texas_borderstates_centroids.merge(
@@ -336,6 +346,8 @@ print(f"Time taken for full calculation: {duration_full:.2f} seconds")
 
 
 5. 
+    a. Warning says it is in a geographic CRS, specifically degree. 
+    b. This quite makes sense
 ```{python}
 zips_texas_centroids = zips_texas_centroids.to_crs(epsg=32614)
 zips_withhospital_centroids = zips_withhospital_centroids.to_crs(epsg=32614)
@@ -350,12 +362,13 @@ print(f"Time taken for full calculation: {duration:.2f} seconds")
 
 # Convert distances from meters to miles
 zips_texas_centroids['nearest_hospital_distance_miles'] = zips_texas_centroids['nearest_hospital_distance_meters'] * 0.000621371
-
+zips_texas_centroids_distance_mean = zips_texas_centroids['nearest_hospital_distance_miles'].mean()
+print(f"The average distance is: {zips_texas_centroids_distance_mean:.2f} miles")
 # Verify results
 print(zips_texas_centroids.head())
 ```
-    a.
-    b.
+    
+
     c.
 ```{python}
 zips_texas_centroids.plot(column='nearest_hospital_distance_miles',  legend=True)
@@ -364,9 +377,6 @@ zips_texas_centroids.plot(column='nearest_hospital_distance_miles',  legend=True
 ## Effects of closures on access in Texas (15 pts)
 
 1. 
-2. 
-3. 
-4. 
 ```{python}
 suspected_closures_df['ZIP_CD'] = suspected_closures_df['ZIP_CD'].astype(int).astype(str).str.zfill(5)
 
@@ -375,6 +385,7 @@ closure_table = closure_table['ZIP_CD'].value_counts().reset_index()
 closure_table.columns = ['ZIP_CD', 'Total Closure']
 closure_table
 ```
+2. 
 ```{python}
 
 closure_choropleth = texas_zip_codes.merge(closure_table, on='ZIP_CD', how='right')
@@ -383,6 +394,7 @@ closure_choropleth = texas_zip_codes.merge(closure_table, on='ZIP_CD', how='righ
 ```{python}
 closure_choropleth.plot(column = 'Total Closure', legend = True)
 ```
+3. 
 ```{python}
 closure_choropleth = closure_choropleth.to_crs(epsg=32614)
 
@@ -401,6 +413,7 @@ indirectly_affected_zip_count = indirectly_affected_zips['ZIP_CD'].nunique()
 # Display results
 print(f"Number of indirectly affected ZIP codes in Texas: {indirectly_affected_zip_count}")
 ```
+4. 
 ```{python}
 zips_texas_centroids['Category'] = 'Not Affected'
 
@@ -422,3 +435,10 @@ zips_texas_centroids.plot(
 ```
 
 ## Reflecting on the exercise (10 pts) 
+1. 
+2. The two approaches provide a basic approximation of hospital access. There are limitations such as 
+the 10-mile radius might not accurately capture true accessibility. Some rural areas may have fewer transportation options, 
+making a 10-mile distance a significant barrier, while urban areas may have better transit or multiple hospitals nearby.
+Also, we are measuring the data based on zip code areas, which in reality it is subject to change and is not all accurate 
+w.r.t. boundary measurements. There are potential ways to improve this, such as adding GIS information of transportation 
+times into the system, considering hospital deisity and population.

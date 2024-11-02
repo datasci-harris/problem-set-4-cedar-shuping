@@ -298,6 +298,7 @@ zips_withhospital_centroids
 4. 
     a.
 ```{python}
+#| warning: false
 from shapely.geometry import Point
 import time
 
@@ -318,6 +319,7 @@ print(f"Time taken for 10 ZIP codes: {duration:.2f} seconds")
 ```
     b.
 ```{python}
+#| warning: false
 # Start timer
 start_time_full = time.time()
 

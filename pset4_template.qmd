@@ -30,9 +30,9 @@ Please refer to the minilesson on code style
     - Partner 1 (name and cnet ID):
     - Partner 2 (name and cnet ID): Shuping Wu, shupingw
 3. Partner 1 will accept the `ps4` and then share the link it creates with their partner. You can only share it with one partner so you will not be able to change it after your partner has accepted. 
-4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: \*\*\_\_\*\* \*\*\_SHW_\*\*
+4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: \*\*\_CL_\*\* \*\*\_SHW_\*\*
 5. "I have uploaded the names of anyone else other than my partner and I worked with on the problem set **[here](https://docs.google.com/forms/d/185usrCREQaUbvAXpWhChkjghdGgmAZXA3lPWpXLLsts/edit)**"  (1 point)
-6. Late coins used this pset: \*\*\_\_\*\* Late coins left after submission: \*\*\_\_\*\*
+6. Late coins used this pset: \*\*\_1_\*\* Late coins left after submission: \*\*\_1_\*\*
 7. Knit your `ps4.qmd` to an PDF file to make `ps4.pdf`, 
     * The PDF should not be more than 25 pages. Use `head()` and re-size figures when appropriate. 
 8. (Partner 1): push  `ps4.qmd` and `ps4.pdf` to your github repo.
@@ -42,14 +42,7 @@ Please refer to the minilesson on code style
 **Important:** Repositories are for tracking code. **Do not commit the data or shapefiles to your repo.** The best way to do this is with `.gitignore`, which we have covered in class. If you do accidentally commit the data, Github has a [guide](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github#removing-files-from-a-repositorys-history). The best course of action depends on whether you have pushed yet. This also means that both partners will have to download the initial raw data and any data cleaning code will need to be re-run on both partners' computers. 
 
 ## Download and explore the Provider of Services (POS) file (10 pts)
-1. 
-2. 
-    a.
-    b.
-3. 
-4. 
-    a.
-    b.
+1. & 2. 
 ```{python}
 import pandas as pd
 
@@ -71,6 +64,14 @@ print(f"Number of short-term hospitals reported in 2016 data: {num_hospitals_6}"
 unique_hospitals = short_term_hospitals_6.drop_duplicates(subset='FAC_NAME')
 print(f"Number of unique hospitals: {len(unique_hospitals)}")
 ```
+
+For part I: Download and explore the Provider of Services (POS) file, we only need the variables including PRVDR_CTGRY_SBTYP_CD, PRVDR_CTGRY_CD, FAC_NAME, PRVDR_NUM. 
+
+In 2016, the United States had 4,840 community hospitals. These are defined as non-federal, short-term general and specialty hospitals whose facilities and services are available to the public. The source is from AHA (American Hospital Association): https://www.aha.org/system/files/2018-05/2018-chartbook-table-2-1.pdf.
+
+Why it differs: pos2016 from CMS (Centers for Medicare & Medicaid Services) might include facilities beyond the typical definition of short-term hospitals, such as specialty clinics or outpatient centers, leading to an inflated count. Also, the dataset is from 2016, it may not reflect hospital closures, mergers, or reclassifications that have occurred.
+
+3. 
 ```{python}
 short_term_hospitals_7 = pos2017[(pos2017['PRVDR_CTGRY_CD'] == 1) & (pos2017['PRVDR_CTGRY_SBTYP_CD'] == 1)]
 num_hospitals_7 = short_term_hospitals_7.shape[0]
@@ -87,6 +88,8 @@ num_hospitals_9 = short_term_hospitals_9.shape[0]
 
 print(f"Number of short-term hospitals reported in 2019 data: {num_hospitals_9}")
 ```
+
+4. 
 ```{python}
 import altair as alt
 
@@ -135,6 +138,9 @@ chart_unique_hospitals = alt.Chart(unique_hospitals_per_year).mark_bar().encode(
 
 chart_unique_hospitals.display()
 ```
+
+The number of observations equals the number of unique hospitals each year, it implies that each hospital is represented by a single unique entry in each dataset, with no repeated entries per hospital within a given year, confirming a straightforward data structure. 
+
 ## Identify hospital closures in POS file (15 pts) (*)
 
 1. 
@@ -217,18 +223,32 @@ print(sorted_corrected_closures_top10[['FAC_NAME', 'ZIP_CD', 'Suspected_Closure_
 ## Download Census zip code shapefile (10 pt) 
 
 1. 
-    a. 
-    -rw-r--r-- 1 15535 197609 6.2M Oct 30 23:58 gz_2010_us_860_00_500k.dbf
+    a. -rw-r--r-- 1 15535 197609 6.2M Oct 30 23:58 gz_2010_us_860_00_500k.dbf
     
-    -rw-r--r-- 1 15535 197609  165 Oct 30 23:58 gz_2010_us_860_00_500k.prj
+    b. -rw-r--r-- 1 15535 197609  165 Oct 30 23:58 gz_2010_us_860_00_500k.prj
     
-    -rw-r--r-- 1 15535 197609 799M Oct 30 23:58 gz_2010_us_860_00_500k.shp
+    c. -rw-r--r-- 1 15535 197609 799M Oct 30 23:58 gz_2010_us_860_00_500k.shp
     
-    -rw-r--r-- 1 15535 197609 259K Oct 30 23:58 gz_2010_us_860_00_500k.shx
+    d. -rw-r--r-- 1 15535 197609 259K Oct 30 23:58 gz_2010_us_860_00_500k.shx
     
-    -rw-r--r-- 1 15535 197609  16K Oct 30 23:58 gz_2010_us_860_00_500k.xml
+    e. -rw-r--r-- 1 15535 197609  16K Oct 30 23:58 gz_2010_us_860_00_500k.xml
 
-    b. 
+
+a. .dbf (Attribute Data File): Contains attribute data for each shape (e.g., names, values, categories), stored in a tabular format. This file links each shape’s attributes, providing additional context to the geometries stored in the .shp file.
+Size: 6.2 MB
+
+b. .prj (Projection File): Stores the coordinate system and projection information. This file defines how the geometrical data is projected on the Earth’s surface, essential for accurate spatial analysis and alignment with other datasets.
+Size: 165 bytes
+
+c. .shp (Shape File): Contains the geometry of the features, such as points, lines, or polygons. This is the core file of the shapefile dataset and is necessary for drawing the shapes on a map.
+Size: 799 MB
+
+d. .shx (Shape Index File): Stores the positional index of the feature geometry to allow quick access to the geometrical data in the .shp file. It acts as a spatial index that accelerates data retrieval.
+Size: 259 KB
+
+e. .xml (Metadata File): Contains metadata about the shapefile, such as the data’s source, description, and other attributes. Metadata provides context for the dataset’s creation and use.
+Size: 16 KB
+
 2. 
 ```{python}
 import geopandas as gpd
@@ -385,6 +405,7 @@ closure_table = closure_table['ZIP_CD'].value_counts().reset_index()
 closure_table.columns = ['ZIP_CD', 'Total Closure']
 closure_table
 ```
+
 2. 
 ```{python}
 
@@ -394,6 +415,7 @@ closure_choropleth = texas_zip_codes.merge(closure_table, on='ZIP_CD', how='righ
 ```{python}
 closure_choropleth.plot(column = 'Total Closure', legend = True)
 ```
+
 3. 
 ```{python}
 closure_choropleth = closure_choropleth.to_crs(epsg=32614)
@@ -413,6 +435,7 @@ indirectly_affected_zip_count = indirectly_affected_zips['ZIP_CD'].nunique()
 # Display results
 print(f"Number of indirectly affected ZIP codes in Texas: {indirectly_affected_zip_count}")
 ```
+
 4. 
 ```{python}
 zips_texas_centroids['Category'] = 'Not Affected'
@@ -435,7 +458,9 @@ zips_texas_centroids.plot(
 ```
 
 ## Reflecting on the exercise (10 pts) 
-1. 
+1. The potential issue here is accurately identifying hospital closures and openings year-over-year, given that simply looking at changes in hospital names might lead to incorrect conclusions. Some hospitals may appear to have "closed" or "opened" due to name changes or administrative updates, rather than actual closures or openings.
+To address this, the approach suggested is filtering hospitals by unique identifiers of address and zipcode. By verifying changes based on location data rather than names alone, we can more reliably confirm actual closures and openings. For instance, if two hospitals with specific addresses and zipcodes are missing in a given year, they are likely closed. Conversely, new addresses and zipcodes indicate genuine openings.
+
 2. The two approaches provide a basic approximation of hospital access. There are limitations such as 
 the 10-mile radius might not accurately capture true accessibility. Some rural areas may have fewer transportation options, 
 making a 10-mile distance a significant barrier, while urban areas may have better transit or multiple hospitals nearby.
